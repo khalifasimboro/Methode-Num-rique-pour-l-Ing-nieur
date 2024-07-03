@@ -1,0 +1,298 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# 1)Définir la fonction à interpoler
+def f(x):
+    return np.sin(x)
+
+# Générer n points uniformément répartis sur [-π, π]
+n = 50
+x_points = np.linspace(-np.pi, np.pi, n)
+y_points = f(x_points)
+
+# Fonction pour l'interpolation de Lagrange
+def lagrange_interpolation(x, x_points, y_points):
+    n = len(x_points)
+    P = 0
+    for i in range(n):
+        L = 1
+        for j in range(n):
+            if i != j:
+                L *= (x - x_points[j]) / (x_points[i] - x_points[j])
+        P += y_points[i] * L
+    return P
+
+# Générer des valeurs x pour tracer le polynôme
+x_values = np.linspace(-np.pi, np.pi, 2000)
+y_values = [lagrange_interpolation(x, x_points, y_points) for x in x_values]
+y_true_values = f(x_values)
+
+# Tracer la fonction originale et le polynôme d'interpolation
+plt.plot(x_values, y_true_values, color='green', label='sin(x)')
+plt.plot(x_values, y_values, color='blue', linestyle='dashed', label='Polynôme d\'interpolation')
+plt.scatter(x_points, y_points, color='red', label='Points de données')
+
+# Ajouter des labels et une légende
+plt.xlabel('x')
+plt.ylabel('y')
+plt.title('Interpolation polynomiale de Lagrange de sin(x)')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+#2-a) Calculer l'erreur maximale pour chaque n
+errors = []
+n_values = range(2, 51)
+
+for n in n_values:
+    x_points = np.linspace(-np.pi, np.pi, n)
+    y_points = f(x_points)
+
+    y_interp = np.array([lagrange_interpolation(x, x_points, y_points) for x in x_values])
+
+    error = np.max(np.abs(y_true_values - y_interp))
+    errors.append(error)
+print(len(errors))
+# Tracer l'erreur en fonction de n
+plt.plot(n_values, errors, marker='o', linestyle='-', color='blue')
+plt.xlabel('n')
+plt.ylabel('Erreur maximale')
+plt.title('Erreur maximale de l\'interpolation de Lagrange')
+plt.grid(True)
+plt.show()
+
+# 3)Définition de la fonction de Runge
+def runge_function(x):
+    return 1 / (1 + 25 * x**2)
+
+# Fonction pour calculer les points de Tchebychev
+def tchebychev_points(n):
+    return np.cos((2*np.arange(1, n+1) - 1) * np.pi / (2*n))
+
+# Fonction pour calculer les points d'interpolation équidistants
+def equidistant_points(n):
+    return np.linspace(-1, 1, n)
+
+# Fonction pour calculer l'erreur entre f(x) et p_n(f)
+def interpolation_error(f, pn):
+    return np.abs(f - pn)
+
+# Fonction pour calculer l'interpolation de Lagrange
+def lagrange_interpolation(x, x_points, y_points):
+    n = len(x_points)
+    P = np.zeros_like(x)
+    for i in range(n):
+        L = 1
+        for j in range(n):
+            if i != j:
+                L *= (x - x_points[j]) / (x_points[i] - x_points[j])
+        P += y_points[i] * L
+    return P
+
+# Définition de la plage de valeurs de x
+x_values = np.linspace(-1, 1, 1000)
+
+# Définition du nombre de points d'interpolation
+n_values = [10, 20, 50]
+
+# Calcul des valeurs de la fonction de Runge aux points de la grille
+f_values = runge_function(x_values)
+
+# Tracé des graphiques
+plt.figure(figsize=(15, 15))
+
+for i, n in enumerate(n_values):
+    # Calcul des points d'interpolation pour chaque n
+    x_tchebychev = tchebychev_points(n)
+    y_tchebychev = runge_function(x_tchebychev)
+    pn_tchebychev = lagrange_interpolation(x_values, x_tchebychev, y_tchebychev)
+
+    x_equidistant = equidistant_points(n)
+    y_equidistant = runge_function(x_equidistant)
+    pn_equidistant = lagrange_interpolation(x_values, x_equidistant, y_equidistant)
+
+    # Tracé des interpolations
+    plt.subplot(len(n_values), 2, 2*i+1)
+    plt.plot(x_values, f_values, label='f(x)')
+    plt.plot(x_values, pn_tchebychev, label=f'p_{n}(f) (Tchebychev)')
+    plt.scatter(x_tchebychev, y_tchebychev, color='red', label='Points de Tchebychev')
+    plt.legend()
+    plt.title(f'Interpolation avec {n} points de Tchebychev')
+
+    plt.subplot(len(n_values), 2, 2*i+2)
+    plt.plot(x_values, f_values, label='f(x)')
+    plt.plot(x_values, pn_equidistant, label=f'p_{n}(f) (équidistants)')
+    plt.scatter(x_equidistant, y_equidistant, color='red', label='Points équidistants')
+    plt.legend()
+    plt.title(f'Interpolation avec {n} points équidistants')
+
+    # Calcul et tracé de l'erreur d'interpolation
+    error_tchebychev = interpolation_error(f_values, pn_tchebychev)
+    error_equidistant = interpolation_error(f_values, pn_equidistant)
+
+    plt.subplot(len(n_values), 2, 2*i+1)
+    plt.plot(x_values, error_tchebychev, label='Erreur Tchebychev')
+    plt.legend()
+    plt.subplot(len(n_values), 2, 2*i+2)
+    plt.plot(x_values, error_equidistant, label='Erreur équidistants')
+    plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+
+#4-b)Fonction qui permet de calculer les coefficients Ck/ et 4-c) Implémenter une fonction pour évaluer le polynôme
+
+def tchebychev_polynome(n, x):
+    return np.cos(n * np.arccos(x))
+
+def tchebychev_points(n):
+    return np.cos((2*np.arange(n+1) + 1) / (2*(n+1)) * np.pi)
+
+def tchebychev_matrix(n, x):
+    T = np.zeros((n+1, n+1))
+    T[:,0] = 1
+    if n > 0:
+        T[:,1] = x
+    for k in range(2, n+1):
+        T[:,k] = 2 * x * T[:,k-1] - T[:,k-2]
+    return T
+
+def coefficients_tchebychev(n, y):
+    T = tchebychev_matrix(n, x)
+    c = np.linalg.solve(T, y)
+    return c
+
+def evaluer_tchebychev(c, x):
+    n = len(c) - 1
+    T = np.zeros((len(x), n+1))
+    T[:,0] = 1
+    if n > 0:
+        T[:,1] = x
+    for k in range(2, n+1):
+        T[:,k] = 2 * x * T[:,k-1] - T[:,k-2]
+    return T @ c
+
+
+
+# Tester l'algorithme avec n=2
+n = 2
+x = tchebychev_points(n)
+#print(x)
+
+#1er cas:
+y0=[]
+for i in range(0,n+1):
+    y0.append(tchebychev_polynome(0, x[i]))
+c = coefficients_tchebychev(n, y0)
+#print(c)
+print("les coefficients sont:",c,"et les valeurs de Pn sont:",evaluer_tchebychev(c, x))
+
+#2eme cas:
+y1=[]
+for i in range(0,n+1):
+    y1.append(tchebychev_polynome(1, x[i]))
+c = coefficients_tchebychev(n, y1)
+#print(c)
+print("les coefficients sont:",c,"et les valeurs de Pn sont:",evaluer_tchebychev(c, x))
+
+#3eme cas:
+y2=[]
+for i in range(0,n+1):
+    y2.append(tchebychev_polynome(2, x[i]))
+c = coefficients_tchebychev(n, y2)
+#print(c)
+print("les coefficients sont:",c,"et les valeurs de Pn sont:",evaluer_tchebychev(c, x))
+
+
+#4-d) Test sur des fonctions
+# Fonction pour évaluer le polynôme d'interpolation pn(x)
+def evaluate_chebyshev_polynomial(c, x):
+    n = len(c) - 1
+    p_n = np.zeros_like(x)
+    for k in range(n + 1):
+        T_k = np.cos(k * np.arccos(x))
+        p_n += c[k] * T_k
+    return p_n
+
+# Fonction pour calculer les points de Tchebychev
+def tchebychev_points(n):
+    return np.cos((2*np.arange(1, n+2) - 1) * np.pi / (2*(n+1)))
+
+# Définition de la plage de valeurs de x
+x_values = np.linspace(-1, 1, 1000)
+
+# Définition du nombre de points d'interpolation
+n_values = [2, 3, 5, 10]
+
+# Tracé des graphiques
+plt.figure(figsize=(15, 10))
+
+for i, n in enumerate(n_values):
+    plt.subplot(2, 2, i+1)
+
+    # Calcul des coefficients pour les polynômes 1, x et x^2
+    x_tchebychev = tchebychev_points(n)
+    y_1 = np.ones_like(x_tchebychev)
+    y_x = x_tchebychev
+    y_x2 = x_tchebychev ** 2
+
+    c_1 = chebyshev_coefficients(x_tchebychev, y_1, n)
+    c_x = chebyshev_coefficients(x_tchebychev, y_x, n)
+    c_x2 = chebyshev_coefficients(x_tchebychev, y_x2, n)
+
+    # Évaluation des polynômes d'interpolation
+    pn_values_1 = evaluate_chebyshev_polynomial(c_1, x_values)
+    pn_values_x = evaluate_chebyshev_polynomial(c_x, x_values)
+    pn_values_x2 = evaluate_chebyshev_polynomial(c_x2, x_values)
+
+    # Tracé des courbes
+    plt.plot(x_values, pn_values_1, label='Interpolation de 1')
+    plt.plot(x_values, pn_values_x, label='Interpolation de x')
+    plt.plot(x_values, pn_values_x2, label='Interpolation de x^2')
+    plt.legend()
+    plt.title(f'Interpolation avec n={n}')
+
+plt.tight_layout()
+plt.show()
+
+
+#4-d)Tracer pour n=10
+x_tchebychev = tchebychev_points(10)
+y_tchebychev = runge_function(x_tchebychev)
+pn_tchebychev = lagrange_interpolation(x_values, x_tchebychev, y_tchebychev)
+
+f_values = runge_function(x_tchebychev)
+c = chebyshev_coefficients(x_tchebychev, f_values, 10)
+pn_values = evaluate_chebyshev_polynomial(c , x_values)
+
+plt.plot(x_values, pn_tchebychev, label=f'p_10(f) (Tchebychev)')
+
+plt.plot(x_values, pn_values, label='Interpolation de la fonction de Runge')
+
+plt.scatter(x_tchebychev, y_tchebychev, color='red', label='Points de Tchebychev')
+plt.legend()
+plt.title(f'Interpolation avec 10 points de Tchebychev')
+plt.title(f'Interpolation avec n=10')
+
+plt.show()
+
+#4-e)Tracer pour n=660
+x_tchebychev = tchebychev_points(10)
+y_tchebychev = runge_function(x_tchebychev)
+pn_tchebychev = lagrange_interpolation(x_values, x_tchebychev, y_tchebychev)
+
+f_values = runge_function(x_tchebychev)
+c = chebyshev_coefficients(x_tchebychev, f_values, 660)
+pn_values = evaluate_chebyshev_polynomial(c , x_values)
+
+plt.plot(x_values, pn_tchebychev, label=f'p_10(f) (Tchebychev)')
+
+plt.plot(x_values, pn_values, label='Interpolation de la fonction de Runge')
+
+plt.scatter(x_tchebychev, y_tchebychev, color='red', label='Points de Tchebychev')
+plt.legend()
+plt.title(f'Interpolation avec 10 points de Tchebychev')
+plt.title(f'Interpolation avec n=660')
+
+plt.show()
